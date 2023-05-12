@@ -1,0 +1,82 @@
+service: swapi-aws-test-api
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-west-2
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource:
+            - arn:aws:dynamodb:us-west-2:889331923070:table/charactersTable
+            - arn:aws:dynamodb:us-west-2:889331923070:table/ratingsTable
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+
+functions:
+  getCharacters:
+    handler: src/services/getCharacters.handler
+    events:
+      - httpApi:
+          path: /personajes
+          method: get
+  getCharacter:
+    handler: src/services/getCharacter.handler
+    events:
+      - httpApi:
+          path: /personaje/{id}
+          method: get
+  addFavorite:
+    handler: src/services/addFavorite.handler
+    events:
+      - httpApi:
+          path: /puntuar-favorito
+          method: post
+  getRanks:
+    handler: src/services/getRanks.handler
+    events:
+      - httpApi:
+          path: /valoraciones
+          method: get
+	
+resources:
+  Resources:
+    charactersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: charactersTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    ratingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ratingsTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
